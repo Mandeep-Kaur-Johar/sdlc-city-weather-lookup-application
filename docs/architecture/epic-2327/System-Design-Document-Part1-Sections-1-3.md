@@ -38,11 +38,9 @@ The application tier is an ASP.NET Core (.NET 8) Web API exposing exactly two en
 
 Interfaces and protocols are deliberately narrow: browser-to-API is HTTPS with JSON payloads and an `Authorization` bearer header; API-to-provider is outbound HTTPS with the key injected from Azure Key Vault via managed identity; API-to-telemetry is the Application Insights SDK over HTTPS. Error semantics are uniform and contract-level: HTTP 400 with a `ProblemDetails` body for validation failures, 401 for missing or invalid tokens, 403 for insufficient permission, 404 for an unknown city, 429 with a `Retry-After` header for throttling, and 503 when the provider remains unavailable after retries.
 
-- !Solution Architecture
+### **Diagram: Solution Architecture**
 
-**Caption - Solution Architecture.** This diagram shows how a city search travels from the React frontend, through the security edge (rate limiter, JWT authentication, permission authorization), into the Weather API's controller/validator/service layering, out to the cache or the external weather provider, and finally into Application Insights for telemetry. Its business meaning is containment of risk: the provider key and the provider quota both sit behind our own boundary, so a change of provider, a quota breach, or a provider outage is absorbed by our API rather than reaching the user's browser.
-
-**Fallback (Mermaid source - also committed as `docs/architecture/epic-2327/diagram-architecture.mmd`):**
+**Caption.** This diagram shows how a city search travels from the React frontend, through the security edge (rate limiter, JWT authentication, permission authorization), into the Weather API's controller/validator/service layering, out to the cache or the external weather provider, and finally into Application Insights for telemetry. Its business meaning is containment of risk: the provider key and the provider quota both sit behind our own boundary, so a change of provider, a quota breach, or a provider outage is absorbed by our API rather than reaching the user's browser. Source: `docs/architecture/epic-2327/diagram-architecture.mmd`.
 
 ```mermaid
 flowchart TB
@@ -102,11 +100,9 @@ flowchart TB
 
 **Error handling, idempotency, retries and caching.** Both endpoints are HTTP GET and therefore naturally idempotent and safe to retry; the client Retry button simply re-issues the same request. Retry on the provider edge is bounded at three attempts with exponential backoff and is applied only to timeouts and 5xx responses - a provider 404 is a business outcome (unknown city) and is never retried, it is translated straight to HTTP 404 for the client. When retries are exhausted the API degrades gracefully to HTTP 503 rather than hanging, satisfying User Story 2336. Cache invalidation is purely time-based; there is no manual purge path because weather data is inherently time-decaying and a ten-minute staleness window is acceptable for a current-temperature display.
 
-- !Critical Workflow Sequence
+### **Diagram: Critical Workflow Sequence**
 
-**Caption - Critical Workflow Sequence.** This diagram traces the single highest-value flow in Epic 2327 - a user searching for a city and receiving its current temperature - including the throttling, authentication, validation, cache-hit, cache-miss, unknown-city and provider-failure branches. It matters commercially because every branch shown maps to an acceptance criterion that QA will test, so the diagram doubles as the test-scenario inventory.
-
-**Fallback (Mermaid source - also committed as `docs/architecture/epic-2327/diagram-sequence.mmd`):**
+**Caption.** This diagram traces the single highest-value flow in Epic 2327 - a user searching for a city and receiving its current temperature - including the throttling, authentication, validation, cache-hit, cache-miss, unknown-city and provider-failure branches. It matters commercially because every branch shown maps to an acceptance criterion that QA will test, so the diagram doubles as the test-scenario inventory. Source: `docs/architecture/epic-2327/diagram-sequence.mmd`.
 
 ```mermaid
 sequenceDiagram
@@ -147,7 +143,8 @@ sequenceDiagram
                     Svc-->>UI: HTTP 503 with Retry button
                 end
             end
-            Svc-->>UI: HTTP 200 WeatherResponseDto
+            Svc-->>Ctrl: WeatherResponseDto
+            Ctrl-->>UI: HTTP 200 JSON
             UI-->>User: Display temperature condition and observed time
         end
     end
