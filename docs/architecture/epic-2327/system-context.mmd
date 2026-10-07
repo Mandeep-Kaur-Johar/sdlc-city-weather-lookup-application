@@ -1,0 +1,8 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TB
+    EndUser(["End User - City Weather Seeker"]) -->|HTTPS search city| WeatherApp["City Weather Lookup Application"]
+    WeatherApp -->|HTTPS REST current weather| Provider(["Third Party Weather Provider - OpenWeatherMap"])
+    WeatherApp -->|Validate bearer token| IdP(["Token Issuer - Identity Provider"])
+    WeatherApp -->|Read provider API key| KeyVault(["Azure Key Vault - Secrets Store"])
+    WeatherApp -.->|Telemetry logs and metrics| AppInsights(["Application Insights and Log Analytics"])
+    EndUser -->|Recent searches and unit preference| LocalStorage(["Browser localStorage"])

@@ -1,0 +1,55 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TB
+    subgraph Client["Frontend - React 18 TypeScript"]
+        SearchUI["City Search Component"]
+        ResultUI["Weather Result Card"]
+        StateUI["Loading and Error State Handler"]
+        UnitUI["Celsius Fahrenheit Toggle"]
+        RecentUI["Recent Searches Chips"]
+        HttpClient["Api Client with Bearer Interceptor"]
+    end
+    subgraph Edge["Security and Edge"]
+        RateLimit["Rate Limiter - 429 Retry-After"]
+        AuthMw["JWT Bearer Authentication Middleware"]
+        PermMw["Permission and Role Authorization"]
+    end
+    subgraph Server["Backend - ASP.NET Core .NET 8 Web API"]
+        WeatherCtrl["WeatherController - GET api weather"]
+        CitiesCtrl["CitiesController - GET api cities"]
+        Validator["City Request Validator and Normaliser"]
+        WeatherSvc["WeatherService - Business Logic"]
+        ProviderSvc["Typed HttpClient Provider Client with Retry"]
+        CacheSvc["IMemoryCache - 10 Minute TTL"]
+    end
+    subgraph Data["Data Layer"]
+        CityStore[("City Reference List - JSON Seed Data")]
+    end
+    subgraph Ext["External Systems"]
+        ProviderApi(["Weather Provider REST API"])
+        Vault(["Azure Key Vault"])
+    end
+    subgraph Obs["Observability"]
+        Insights["Application Insights"]
+        LogAnalytics["Log Analytics Workspace"]
+    end
+
+    SearchUI --> HttpClient
+    ResultUI --> HttpClient
+    RecentUI --> SearchUI
+    UnitUI --> ResultUI
+    StateUI --> ResultUI
+    HttpClient -->|HTTPS JSON Bearer token| RateLimit
+    RateLimit --> AuthMw
+    AuthMw --> PermMw
+    PermMw --> WeatherCtrl
+    PermMw --> CitiesCtrl
+    WeatherCtrl --> Validator
+    Validator --> WeatherSvc
+    WeatherSvc --> CacheSvc
+    WeatherSvc --> ProviderSvc
+    CitiesCtrl --> CityStore
+    ProviderSvc -->|HTTPS timeout 5s retry 3x| ProviderApi
+    ProviderSvc -->|Fetch provider API key| Vault
+    WeatherCtrl -.->|Telemetry| Insights
+    ProviderSvc -.->|Dependency telemetry| Insights
+    Insights --> LogAnalytics

@@ -1,0 +1,23 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TD
+    Dev(["Developer"]) -->|Push feature branch| Repo["GitHub Repository sdlc-city-weather-lookup-application"]
+    Repo --> PR["Pull Request to main"]
+    PR --> CIBuild["GitHub Actions CI - restore and build"]
+    CIBuild --> UnitTests["Unit Tests - xUnit and Vitest"]
+    UnitTests --> Coverage{"Coverage at least 80 percent"}
+    Coverage -->|Fail| BlockPR["Block merge and notify author"]
+    Coverage -->|Pass| Scan["Static Analysis - CodeQL and dependency scan"]
+    Scan --> SecretScan["Secret Scanning - no provider API key in bundle"]
+    SecretScan --> Artifact["Publish Artifacts - React bundle and .NET 8 package"]
+    Artifact --> DeployDev["Deploy to Development Environment"]
+    DeployDev --> IntTests["Integration and Contract Tests"]
+    IntTests --> DeployTest["Deploy to Test Environment"]
+    DeployTest --> E2E["End to End and Accessibility Tests"]
+    E2E --> Approval{"Manual Release Approval"}
+    Approval -->|Rejected| Rollback["Rollback and raise defect"]
+    Approval -->|Approved| DeployProd["Deploy to Production - Static Web App and App Service slot"]
+    DeployProd --> SmokeTest["Post Deployment Smoke Tests"]
+    SmokeTest --> Monitor["Monitor via Application Insights alerts"]
+    Monitor --> HealthGate{"Error rate within threshold"}
+    HealthGate -->|Breach| Rollback
+    HealthGate -->|Healthy| Complete(["Release Complete"])

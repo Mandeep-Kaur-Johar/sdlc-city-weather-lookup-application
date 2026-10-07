@@ -1,0 +1,29 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TB
+    Users(["End Users - Browser"])
+    subgraph Azure["Azure Subscription - Primary Region"]
+        subgraph FrontendTier["Azure Static Web Apps"]
+            ReactBundle["React TypeScript Static Bundle"]
+        end
+        subgraph BackendTier["Azure App Service Linux - .NET 8"]
+            RateLimiter["Rate Limiting Middleware"]
+            WeatherApi["Weather API Application"]
+        end
+        Vault["Azure Key Vault - Provider API Key"]
+        Insights["Application Insights"]
+        Logs["Log Analytics Workspace"]
+        ConfigSvc["App Service Configuration and Managed Identity"]
+    end
+    ProviderApi(["Weather Provider Public REST API"])
+    IdProvider(["Token Issuer - Identity Provider"])
+
+    Users -->|HTTPS TLS 1.2 plus| ReactBundle
+    ReactBundle -->|HTTPS JSON with bearer token| RateLimiter
+    RateLimiter --> WeatherApi
+    WeatherApi -->|Managed identity secret fetch| Vault
+    WeatherApi -->|Validate token signature| IdProvider
+    WeatherApi -->|HTTPS outbound| ProviderApi
+    WeatherApi -.->|Traces metrics and logs| Insights
+    ReactBundle -.->|Browser telemetry| Insights
+    Insights --> Logs
+    ConfigSvc --> WeatherApi

@@ -1,0 +1,67 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+sequenceDiagram
+    actor User as End User
+    participant UI as React Search UI
+    participant Client as Api Client Interceptor
+    participant Limit as Rate Limiter
+    participant Auth as JWT Auth Middleware
+    participant Ctrl as Weather Controller
+    participant Val as City Validator
+    participant Svc as Weather Service
+    participant Cache as Memory Cache
+    participant Prov as Provider Client
+    participant Ext as Weather Provider API
+
+    User->>UI: Enter city name and submit
+    UI->>UI: Validate minimum 2 characters
+    UI->>Client: Request weather for city
+    Client->>Limit: GET api weather with bearer token
+    alt Rate limit exceeded
+        Limit-->>Client: HTTP 429 with Retry-After
+        Client-->>UI: Show throttling message
+    else Within limit
+        Limit->>Auth: Forward request
+        alt Token missing or invalid
+            Auth-->>Client: HTTP 401
+            Client->>UI: Clear token and route to sign in
+        else Token valid
+            Auth->>Ctrl: Authorised request
+            Ctrl->>Val: Validate and normalise city
+            alt Invalid input
+                Val-->>Ctrl: Validation failure
+                Ctrl-->>Client: HTTP 400 ProblemDetails
+            else Valid input
+                Ctrl->>Svc: GetCurrentWeather normalised city
+                Svc->>Cache: Lookup cache key
+                alt Cache hit under 10 minutes
+                    Cache-->>Svc: Cached WeatherReading
+                else Cache miss
+                    Svc->>Prov: Fetch current weather
+                    Prov->>Ext: HTTPS GET weather with server side key
+                    alt Provider success
+                        Ext-->>Prov: Provider JSON payload
+                        Prov-->>Svc: Mapped WeatherReading
+                        Svc->>Cache: Store with 10 minute TTL
+                    else Unknown city
+                        Ext-->>Prov: HTTP 404
+                        Prov-->>Svc: City not found
+                        Svc-->>Ctrl: Not found
+                        Ctrl-->>Client: HTTP 404 error payload
+                    else Timeout or 5xx
+                        Ext-->>Prov: Failure
+                        Prov->>Ext: Retry per policy
+                        Ext-->>Prov: Still failing
+                        Prov-->>Svc: Provider unavailable
+                        Svc-->>Ctrl: Degraded
+                        Ctrl-->>Client: HTTP 503
+                        Client-->>UI: Show error with Retry button
+                    end
+                end
+                Svc-->>Ctrl: WeatherResponseDto
+                Ctrl-->>Client: HTTP 200 JSON
+                Client-->>UI: Weather payload
+                UI->>UI: Apply unit preference and store recent search
+                UI-->>User: Display city temperature condition and observed time
+            end
+        end
+    end

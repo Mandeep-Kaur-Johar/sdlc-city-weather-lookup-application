@@ -1,0 +1,25 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TD
+    Start(["User enters city name"]) --> ClientValidate{"Client validation - at least 2 characters"}
+    ClientValidate -->|Invalid| InlineMsg["Show inline validation message - no API call"]
+    ClientValidate -->|Valid| AttachToken["Attach Authorization bearer token"]
+    AttachToken --> CallApi["GET api weather city equals name"]
+    CallApi --> RateCheck{"Rate limit exceeded"}
+    RateCheck -->|Yes| TooMany["HTTP 429 with Retry-After header"]
+    RateCheck -->|No| TokenCheck{"Bearer token valid and permitted"}
+    TokenCheck -->|Missing or invalid| Unauthorised["HTTP 401 - clear token and route to sign in"]
+    TokenCheck -->|Valid but no permission| Forbidden["HTTP 403 Forbidden"]
+    TokenCheck -->|Authorised| ServerValidate{"City present and 1 to 100 characters"}
+    ServerValidate -->|Invalid| BadRequest["HTTP 400 ProblemDetails"]
+    ServerValidate -->|Valid| Normalise["Trim and normalise casing"]
+    Normalise --> CacheCheck{"Cache hit within 10 minutes"}
+    CacheCheck -->|Hit| Respond["HTTP 200 WeatherResponseDto"]
+    CacheCheck -->|Miss| ProviderCall["Call weather provider with retry policy"]
+    ProviderCall --> ProviderResult{"Provider outcome"}
+    ProviderResult -->|Success| MapCache["Map payload and cache for 10 minutes"]
+    MapCache --> Respond
+    ProviderResult -->|Unknown city| NotFound["HTTP 404 City not found"]
+    ProviderResult -->|Timeout or 5xx after retries| Unavailable["HTTP 503 - show error with Retry button"]
+    Respond --> Render["Render city, temperature, condition, observed time"]
+    Render --> UnitToggle["Apply Celsius or Fahrenheit preference from localStorage"]
+    UnitToggle --> SaveRecent["Persist last 5 recent cities in localStorage"]

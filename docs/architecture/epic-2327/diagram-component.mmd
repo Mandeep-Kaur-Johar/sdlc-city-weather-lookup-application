@@ -1,0 +1,50 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+flowchart TB
+    subgraph ReactApp["React TypeScript Frontend"]
+        CitySearchForm["CitySearchForm - debounced controlled input"]
+        SuggestionList["CitySuggestionList - 2 character trigger"]
+        WeatherCard["WeatherCard - accessible result card"]
+        UnitToggleCmp["UnitToggle - localStorage preference"]
+        RecentChips["RecentSearchChips - last 5 cities"]
+        ErrorPanel["LoadingErrorPanel - retry action"]
+        AuthContext["AuthContext - token store"]
+        ApiClient["ApiClient - request and 401 interceptors"]
+    end
+    subgraph ApiLayer["Weather API Presentation Layer"]
+        WeatherController["WeatherController"]
+        CitiesController["CitiesController"]
+        CityRequestValidator["CityRequestValidator"]
+        ProblemDetailsFilter["GlobalExceptionFilter - ProblemDetails"]
+    end
+    subgraph DomainLayer["Domain and Application Layer"]
+        WeatherService["WeatherService"]
+        CityCatalogService["CityCatalogService"]
+        TemperatureMapper["WeatherReadingMapper"]
+    end
+    subgraph InfraLayer["Infrastructure Layer"]
+        WeatherProviderClient["WeatherProviderClient - typed HttpClient"]
+        ResiliencePolicy["Retry and Timeout Policy"]
+        MemoryCacheStore["MemoryCacheStore - key normalised city"]
+        CityRepository["CityRepository - JSON reference list"]
+        SecretsProvider["KeyVaultSecretsProvider"]
+    end
+
+    CitySearchForm --> SuggestionList
+    CitySearchForm --> ApiClient
+    RecentChips --> CitySearchForm
+    WeatherCard --> UnitToggleCmp
+    ApiClient --> AuthContext
+    ApiClient --> ErrorPanel
+    ApiClient --> WeatherCard
+    ApiClient -->|HTTPS JSON| WeatherController
+    ApiClient -->|HTTPS JSON| CitiesController
+    WeatherController --> CityRequestValidator
+    WeatherController --> ProblemDetailsFilter
+    WeatherController --> WeatherService
+    CitiesController --> CityCatalogService
+    WeatherService --> MemoryCacheStore
+    WeatherService --> WeatherProviderClient
+    WeatherService --> TemperatureMapper
+    CityCatalogService --> CityRepository
+    WeatherProviderClient --> ResiliencePolicy
+    WeatherProviderClient --> SecretsProvider

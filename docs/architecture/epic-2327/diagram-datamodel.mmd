@@ -1,0 +1,41 @@
+%%{init: {"theme":"default","securityLevel":"loose","flowchart":{"htmlLabels":true,"curve":"linear"}} }%%
+erDiagram
+    CITY {
+        guid Id PK
+        string Name UK
+        string Country
+        decimal Latitude
+        decimal Longitude
+        string NormalisedName UK
+    }
+    WEATHER_READING {
+        guid Id PK
+        guid CityId FK
+        decimal TemperatureCelsius
+        string Condition
+        int Humidity
+        decimal WindKph
+        datetime ObservedAtUtc
+    }
+    CACHE_ENTRY {
+        string CacheKey PK
+        guid WeatherReadingId FK
+        datetime CachedAtUtc
+        datetime ExpiresAtUtc
+        int TtlMinutes
+    }
+    RECENT_SEARCH {
+        string ClientKey PK
+        string CityName
+        datetime SearchedAtUtc
+        int SlotIndex
+    }
+    USER_PREFERENCE {
+        string ClientKey PK
+        string TemperatureUnit
+        datetime UpdatedAtUtc
+    }
+    CITY ||--o{ WEATHER_READING : "has readings"
+    WEATHER_READING ||--o| CACHE_ENTRY : "cached as"
+    CITY ||--o{ RECENT_SEARCH : "appears in"
+    RECENT_SEARCH }o--|| USER_PREFERENCE : "belongs to client"
