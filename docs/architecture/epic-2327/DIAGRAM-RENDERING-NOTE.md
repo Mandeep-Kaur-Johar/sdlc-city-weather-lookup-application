@@ -1,17 +1,24 @@
 # Diagram Rendering Note - Epic 2327
 
+Last verified: 2026-10-07.
+
 The MCP Kroki/Mermaid PNG rendering service (`render_and_commit_architecture_diagrams`)
-returned a repeatable server-side error during this architecture run:
+still returns a repeatable server-side error:
 
 ```text
 cannot access local variable 'png_signature' where it is not associated with a value
 ```
 
-The failure reproduced for every payload attempted, including a single three-node
-`flowchart TD`, so it is a renderer-service fault rather than a Mermaid syntax fault.
-`output_format="svg"` is rejected by the same tool with `Only png output is currently supported`.
+Re-tested on 2026-10-07 with:
 
-## What was delivered instead
+1. The full `system-context` payload.
+2. A minimal three-node `flowchart TD` payload with default arguments.
+
+Both attempts failed identically, confirming a renderer-service fault rather than a
+Mermaid syntax fault. `output_format="svg"` is rejected by the same tool with
+`Only png output is currently supported`.
+
+## What is delivered instead
 
 - All eight Mermaid sources are committed in this folder as `.mmd` files and are the
   authoritative, version-controlled form of every diagram.
