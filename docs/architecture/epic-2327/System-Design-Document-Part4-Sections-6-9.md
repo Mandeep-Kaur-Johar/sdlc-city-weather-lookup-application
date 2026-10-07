@@ -53,13 +53,11 @@ We assume a single geographic region with no multi-region active-active requirem
 
 ## **8.1 Additional Diagrams**
 
-All Mermaid sources below are committed under `docs/architecture/epic-2327/` in the repository `sdlc-city-weather-lookup-application` and are the authoritative, version-controlled form of every diagram in this document.
+All Mermaid sources below are committed under `docs/architecture/epic-2327/` in the repository `sdlc-city-weather-lookup-application` and are the authoritative, version-controlled form of every diagram in this document. See `DIAGRAM-RENDERING-NOTE.md` for the PNG rendering status.
 
-- !High-Level Flow
+### **Diagram: High-Level Flow**
 
-**Caption - High-Level Flow.** The complete end-to-end request flow for Epic 2327, from the user's keystroke through client validation, throttling, token checks, server-side validation and normalisation, cache evaluation, provider call, and finally rendering with unit preference and recent-search persistence. It ties the four Features together into one picture and shows exactly where each HTTP status code originates.
-
-**Fallback (source: `docs/architecture/epic-2327/diagram-highlevel.mmd`):**
+**Caption.** The complete end-to-end request flow for Epic 2327, from the user's keystroke through client validation, throttling, token checks, server-side validation and normalisation, cache evaluation, provider call, and finally rendering with unit preference and recent-search persistence. It ties the four Features together into one picture and shows exactly where each HTTP status code originates. Source: `docs/architecture/epic-2327/diagram-highlevel.mmd`.
 
 ```mermaid
 flowchart TD
@@ -88,11 +86,9 @@ flowchart TD
     UnitToggle --> SaveRecent["Persist last 5 recent cities in localStorage"]
 ```
 
-- !Deployment Diagram
+### **Diagram: Deployment**
 
-**Caption - Deployment Diagram.** Where each component physically runs: the React bundle on Azure Static Web Apps, the .NET 8 API on Azure App Service Linux behind its rate limiter, Key Vault holding the provider key accessed by managed identity, and telemetry flowing to Application Insights and Log Analytics. Its business meaning is cost and blast-radius clarity - the only outbound path to the paid provider originates in one compute tier that we control and monitor.
-
-**Fallback (source: `docs/architecture/epic-2327/diagram-deployment.mmd`):**
+**Caption.** Where each component physically runs: the React bundle on Azure Static Web Apps, the .NET 8 API on Azure App Service Linux behind its rate limiter, Key Vault holding the provider key accessed by managed identity, and telemetry flowing to Application Insights and Log Analytics. Its business meaning is cost and blast-radius clarity - the only outbound path to the paid provider originates in one compute tier that we control and monitor. Source: `docs/architecture/epic-2327/diagram-deployment.mmd`.
 
 ```mermaid
 flowchart TB
@@ -125,11 +121,9 @@ flowchart TB
     ConfigSvc --> WeatherApi
 ```
 
-- !CI/CD Pipeline
+### **Diagram: CI/CD Pipeline**
 
-**Caption - CI/CD Pipeline.** The delivery path from a developer push through build, unit test, the 80% coverage gate, CodeQL and dependency scanning, the bundle secret scan that enforces User Story 2345, artefact publication, environment promotion, manual production approval, slot-swap deploy, smoke tests and the monitored auto-rollback gate. It matters because the secret scan and the coverage gate are the two automated controls that make security and quality non-negotiable rather than aspirational.
-
-**Fallback (source: `docs/architecture/epic-2327/diagram-cicd.mmd`):**
+**Caption.** The delivery path from a developer push through build, unit test, the 80% coverage gate, CodeQL and dependency scanning, the bundle secret scan that enforces User Story 2345, artefact publication, environment promotion, manual production approval, slot-swap deploy, smoke tests and the monitored auto-rollback gate. It matters because the secret scan and the coverage gate are the two automated controls that make security and quality non-negotiable rather than aspirational. Source: `docs/architecture/epic-2327/diagram-cicd.mmd`.
 
 ```mermaid
 flowchart TD
@@ -156,11 +150,9 @@ flowchart TD
     HealthGate -->|Healthy| Complete(["Release Complete"])
 ```
 
-- !Data Model
+### **Diagram: Data Model**
 
-**Caption - Data Model.** The entity-relationship view derived directly from User Story 2339 and extended with the cache and client-side persistence entities implied by User Stories 2337, 2341 and 2332. No attribute in this model is personally identifying, which is why Section 4.4 requires no additional at-rest encryption beyond platform defaults.
-
-**Fallback (source: `docs/architecture/epic-2327/diagram-datamodel.mmd`):**
+**Caption.** The entity-relationship view derived directly from User Story 2339 and extended with the cache and client-side persistence entities implied by User Stories 2337, 2341 and 2332. No attribute in this model is personally identifying, which is why Section 4.4 requires no additional at-rest encryption beyond platform defaults. Source: `docs/architecture/epic-2327/diagram-datamodel.mmd`.
 
 ```mermaid
 erDiagram
@@ -205,11 +197,9 @@ erDiagram
     RECENT_SEARCH }o--|| USER_PREFERENCE : "belongs to client"
 ```
 
-- !Component Diagram
+### **Diagram: Component**
 
-**Caption - Component Diagram.** Internal module dependencies across the React frontend, the API presentation layer, the domain layer and the infrastructure layer. It shows the strict downward dependency direction that keeps `WeatherService` free of HTTP concerns and `WeatherProviderClient` the only class that knows the vendor exists - the structural property that makes a provider change a one-class change.
-
-**Fallback (source: `docs/architecture/epic-2327/diagram-component.mmd`):**
+**Caption.** Internal module dependencies across the React frontend, the API presentation layer, the domain layer and the infrastructure layer. It shows the strict downward dependency direction that keeps `WeatherService` free of HTTP concerns and `WeatherProviderClient` the only class that knows the vendor exists - the structural property that makes a provider change a one-class change. Source: `docs/architecture/epic-2327/diagram-component.mmd`.
 
 ```mermaid
 flowchart TB
@@ -263,7 +253,9 @@ flowchart TB
     WeatherProviderClient --> SecretsProvider
 ```
 
-**System Context (source: `docs/architecture/epic-2327/system-context.mmd`).** Shows the application as a single box with its end user, the third-party weather provider, the token issuer, Azure Key Vault, Application Insights and browser `localStorage`.
+### **Diagram: System Context**
+
+**Caption.** Shows the application as a single box with its end user, the third-party weather provider, the token issuer, Azure Key Vault, Application Insights and browser `localStorage`. Source: `docs/architecture/epic-2327/system-context.mmd`.
 
 ```mermaid
 flowchart TB
